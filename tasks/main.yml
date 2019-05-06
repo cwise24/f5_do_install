@@ -1,0 +1,85 @@
+---
+# tasks file for lab_roles/f5_do
+- name: Check if DO rpm exist
+  stat:
+    path: "{{ roles_d }}/f5_do_install/files/{{ doRPM }}"
+  register: do_stat
+
+- name: Download DO RPM sha256 checksum
+  get_url:
+    url: https://github.com/F5Networks/f5-declarative-onboarding/raw/master/dist/{{ doSha }}
+    dest: "{{ roles_d }}/f5_do_install/files/{{ doSha }}"
+  when: do_stat.stat.exists == False
+
+- name: Register sha256 output for verification
+  shell: cat "{{ roles_d }}/f5_do_install/files/{{ doSha }}" |  awk -F " " '{print $1}'
+  register: shaSum
+  when: do_stat.stat.exists == False
+
+- name: Download DO RPM from F5 Networks
+  get_url:
+    url: https://github.com/F5Networks/f5-declarative-onboarding/raw/master/dist/{{ doRPM }}
+    dest: "{{ roles_d }}/f5_do_install/files/{{ doRPM }}"
+    checksum: sha256:"{{ shaSum.stdout }}"
+  register: dl_stat
+  until: dl_stat.msg.find("OK")  != 1
+  retries: 3
+  delay: 10
+  when: do_stat.stat.exists == False
+
+- name: Generate login token
+  uri:
+    url: "https://{{ f5_mgmt }}/mgmt/shared/authn/login"
+    method: POST
+    body_format: json
+    body: {"username": "{{ f5_u_cred }}", "password": "{{ f5_u_pass }}", "loginProviderName": "tmos"}
+    validate_certs: no
+  tags: docheck
+  register: Auth_tok
+  delegate_to: localhost
+
+- name:  Check for DO
+  uri:
+    url: "https://{{ f5_mgmt }}/mgmt/shared/declarative-onboarding"
+    method: GET
+    body_format: json
+    headers:
+      Content-Type: application/json
+      X-F5-Auth-Token: "{{ Auth_tok.json.token.token }}"
+    validate_certs: no
+    status_code: 200,202,404
+  tags: docheck
+  register: returnd
+  delegate_to: localhost
+  ignore_errors: yes
+
+- name: Install F5 Declarative Onboarding
+  bigip_iapplx_package:
+    package: "{{ roles_d }}/f5_do_install/files/{{ doRPM }}"
+    provider: "{{ provider }}"
+  delegate_to: localhost
+  when: returnd.status == 404
+
+- name:  Check for DO after install
+  uri:
+    url: "https://{{ f5_mgmt }}/mgmt/shared/declarative-onboarding"
+    method: GET
+    body_format: json
+    headers:
+      Content-Type: application/json
+      X-F5-Auth-Token: "{{ Auth_tok.json.token.token }}"
+    validate_certs: no
+  tags: d0valid
+  register: do_installd
+  delegate_to: localhost
+  until: do_installd.status == 200
+  retries: 3
+  delay: 10
+
+- file:
+   path: "{{ roles_d }}/f5_do_install/files/{{ item }}"
+   state: absent
+  with_items:
+    -  "{{ doSha }}"
+    -  "{{ doRPM }}"
+  when: do_installd.status == 200
