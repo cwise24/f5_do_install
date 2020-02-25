@@ -7,7 +7,7 @@
 
 - name: Download DO RPM sha256 checksum
   get_url:
-    url: https://github.com/F5Networks/f5-declarative-onboarding/raw/master/dist/{{ doSha }}
+    url: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/{{ doTag }}/{{ doSha }}
     dest: "{{ roles_d }}/f5_do_install/files/{{ doSha }}"
   when: do_stat.stat.exists == False
 
@@ -18,7 +18,7 @@
 
 - name: Download DO RPM from F5 Networks
   get_url:
-    url: https://github.com/F5Networks/f5-declarative-onboarding/raw/master/dist/{{ doRPM }}
+    url: https://github.com/F5Networks/f5-declarative-onboarding/releases/download/{{ doTag }}/{{ doRPM }}
     dest: "{{ roles_d }}/f5_do_install/files/{{ doRPM }}"
     checksum: sha256:"{{ shaSum.stdout }}"
   register: dl_stat
