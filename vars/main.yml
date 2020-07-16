@@ -1,2 +1,18 @@
 ---
 # vars file for lab_roles/f5_do
+
+doTag: "v1.13.0"
+doRPM: "f5-declarative-onboarding-1.13.0-5.noarch.rpm"
+doSha: "{{ doRPM + '.sha256'}}"
+
+#Pulls first entry from inventory
+f5_mgmt: "{{ hostvars[groups['adc'][0]]['ansible_host'] }}"
+
+e_user: "admin"
+e_pass: "secret"
+roles_d: "."
+provider:
+  user: "{{ e_user }}"
+  password: "{{ e_pass }}"
+  server: "{{ f5_mgmt }}"
+  validate_certs: no
