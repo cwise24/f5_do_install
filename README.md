@@ -1,7 +1,7 @@
 F5 Declarative Onboarding (DO) Install
 =========
 
-This role will install Declarative Onboarding using F5's API. First we determine if we have DO locally, if not the sha256 checksum is downloaded followed by <br >
+This role will install Declarative Onboarding using F5's API. First we determine corrent tmos version and then if we have DO locally, if not the sha256 checksum is downloaded followed by <br >
 the DO rpm file from [F5's Github site](https://github.com/F5Networks/f5-declarative-onboarding/releases). Once downloaded and validated via sha256 checksum. Now focus is put on the F5 to see if DO exists, upon a 404 return (no DO installation exists)<br>
 the installation begins and is verified.  Optionally you can delete the downloaded files.
 
