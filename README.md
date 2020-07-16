@@ -24,13 +24,18 @@ Variables needed for this role include:
 * Path to roles directory
 
 ```
-doTag: "v1.10.0"
-doRPM: "f5-declarative-onboarding-1.10.0-2.noarch.rpm"
-doSha: "f5-declarative-onboarding-1.10.0-2.noarch.rpm.sha256"
-f5_mgmt: "<IP address>"
-f5_u_cred: "admin"
-f5_u_pass: "secret"
-roles_d: "/home/user/roles"
+doTag: "v1.13.0"
+doRPM: "f5-declarative-onboarding-1.13.0-5.noarch.rpm"
+doSha: "{{ doRPM + '.sha256'}}"
+f5_mgmt: "{{ hostvars[groups['adc'][0]]['ansible_host'] }}"
+e_user: "admin"
+e_pass: "L3tm3Endaem0n"
+roles_d: "."
+provider:
+  user: "{{ e_user }}"
+  password: "{{ e_pass }}"
+  server: "{{ f5_mgmt }}"
+  validate_certs: no
 
 ```
 
@@ -49,9 +54,6 @@ Example
 - hosts: [adc]
   gather_facts: no
   connection: local
-
-  vars_files:
-    - var_file.yml
 
   roles:
     - f5_do_install
